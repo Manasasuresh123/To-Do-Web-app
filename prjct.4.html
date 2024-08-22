@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <link rel="stylesheet" href="styles.css">
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: grey;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    width: 80%;
+    max-width: 600px;
+    background: pink;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2 {
+    margin-top: 0;
+}
+
+input[type="text"], input[type="datetime-local"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    background: #f9f9f9;
+    margin: 5px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+li.completed {
+    text-decoration: line-through;
+    color: #aaa;
+}
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1>To-Do App</h1>
+        <div id="list-container">
+            <h2>Task Lists</h2>
+            <input type="text" id="list-name" placeholder="New list name">
+            <button onclick="createList()">Create List</button>
+            <ul id="list-selector"></ul>
+        </div>
+        <div id="task-container" style="display:none;">
+            <h2>Tasks</h2>
+            <input type="text" id="task-description" placeholder="New task description">
+            <input type="datetime-local" id="task-due-date">
+            <button onclick="addTask()">Add Task</button>
+            <ul id="task-list"></ul>
+        </div>
+    </div>
+    <script>
+let currentList = null;
+const lists = {};
+
+function createList() {
+    const listName = document.getElementById('list-name').value.trim();
+    if (listName === '') {
+        alert('Please enter a list name.');
+        return;
+    }
+    
+    if (lists[listName]) {
+        alert('List already exists.');
+        return;
+    }
+
+    lists[listName] = [];
+    updateListSelector();
+    document.getElementById('list-name').value = '';
+}
+
+function updateListSelector() {
+    const listSelector = document.getElementById('list-selector');
+    listSelector.innerHTML = '';
+    
+    Object.keys(lists).forEach(listName => {
+        const li = document.createElement('li');
+        li.textContent = listName;
+        li.onclick = () => selectList(listName);
+        listSelector.appendChild(li);
+    });
+}
+
+function selectList(listName) {
+    currentList = listName;
+    document.getElementById('task-container').style.display = 'block';
+    updateTaskList();
+}
+
+function addTask() {
+    const description = document.getElementById('task-description').value.trim();
+    const dueDate = document.getElementById('task-due-date').value;
+    if (description === '') {
+        alert('Please enter a task description.');
+        return;
+    }
+
+    const task = {
+        description,
+        completed: false,
+        dueDate: dueDate ? new Date(dueDate) : null
+    };
+
+    lists[currentList].push(task);
+    updateTaskList();
+    document.getElementById('task-description').value = '';
+    document.getElementById('task-due-date').value = '';
+}
+
+function updateTaskList() {
+    const taskList = document.getElementById('task-list');
+    taskList.innerHTML = '';
+
+    if (!currentList) return;
+
+    lists[currentList].forEach((task, index) => {
+        const li = document.createElement('li');
+        if (task.completed) li.classList.add('completed');
+
+        li.innerHTML = `
+            <span>${task.description} ${task.dueDate ? `(Due: ${task.dueDate.toLocaleString()})` : ''}</span>
+            <div>
+                <button onclick="toggleTask(${index})">${task.completed ? 'Undo' : 'Complete'}</button>
+                <button onclick="editTask(${index})">Edit</button>
+                <button onclick="removeTask(${index})">Delete</button>
+            </div>
+        `;
+        taskList.appendChild(li);
+    });
+}
+
+function toggleTask(index) {
+    lists[currentList][index].completed = !lists[currentList][index].completed;
+    updateTaskList();
+}
+
+function editTask(index) {
+    const newDescription = prompt('Enter new task description:', lists[currentList][index].description);
+    if (newDescription !== null) {
+        lists[currentList][index].description = newDescription.trim();
+        updateTaskList();
+    }
+}
+
+function removeTask(index) {
+    if (confirm('Are you sure you want to delete this task?')) {
+        lists[currentList].splice(index, 1);
+        updateTaskList();
+    }
+}
+</script>
+</body>
+</html>
